@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/main">
+<div layout:fragment="mainFragment">
+
+    <form method="get" th:action="@{'/'}">
+        <div class="row mt-3">
+            <div class="col-6 d-flex flex-column gap-3">
+                <div class="form-floating me-3">
+                    <input type="text" class="form-control" id="car_name" name="name" placeholder="car_name"
+                           th:value="${param.name}">
+                    <label for="car_name">Name</label>
+
+                </div>
+                <div class="form-floating me-3">
+                    <input type="number" class="form-control" id="min_year" name="calories" placeholder="min_year"
+                           th:value="${param.calories}">
+                    <label for="min_year">Calories</label>
+                </div>
+                <div class="form-floating me-3">
+                    <input type="number" class="form-control" id="max_price" name="max_price"
+                           placeholder="max_price"
+                           th:value="${param.max_price}">
+                    <label for="max_price">Maximal price</label>
+                </div>
+                <div class="form-floating me-3">
+                    <!-- Выборка. С ее помощью можно выбрать критерий поиска – страна-производитель -->
+                    <select class="form-select" id="country_id" aria-label="country_id" name="country_id">
+                        <!-- Опция Any представляет любую страну-производителя (пользователь не выбирает конкретную страну-производителя в качестве критерия для поиска машин) -->
+                        <option th:value="null">Any</option>
+                        <option th:each="country : ${countries}" th:value="${country.id}"
+                                th:text="${country.name + ' / ' + country.code}"
+                                th:selected="${chosenCountry != null && chosenCountry.equals(country.id)}"></option>
+                    </select>
+                    <label for="country_id">Manufacturer</label>
+                </div>
+                <div class="form-floating me-3">
+                    <!-- Выборка. С ее помощью можно выбрать критерий поиска – категория машины -->
+                    <select class="form-select" id="category_id" aria-label="category_id" name="ingredient_id">
+                        <!-- Опция Any представляет любую категорию (пользователь не выбирает конкретную категорию в качестве критерия для поиска машин) -->
+                        <option th:value="null">Any</option>
+                        <option th:each="ingr : ${ingredients}" th:value="${ingr.id}" th:text="${ingr.name}"
+                                th:selected="${chosenIngr != null && chosenIngr.equals(ingr.id)}"></option>
+                    </select>
+                    <label for="category_id">Ingredients</label>
+                </div>
+            </div>
+            <!--    <div class="card px-3 py-3 my-3 ms-2" style="width: 28%;">-->
+            <div class="col-6 d-flex flex-column gap-3">
+                <h4 class="mt-3">Sort foods:</h4>
+
+                <!-- Через эту форму можно задать размер страницы -->
+
+                <div class="form-floating me-3">
+                    <select class="form-select" id="sort_by" aria-label="sort_by" name="sort_by">
+                        <option value="id" th:selected="${sortBy.equals('id')}">Any</option>
+                        <option value="fullName" th:selected="${sortBy.equals('fullName')}">Name</option>
+                        <option value="calories" th:selected="${sortBy.equals('calories')}">Calories</option>
+                        <option value="price" th:selected="${sortBy.equals('price')}">Price</option>
+                    </select>
+                    <label for="sort_by">Sort by:</label>
+                </div>
+
+                <div class="form-floating me-3">
+                    <select class="form-select" id="sort_order" aria-label="sort_order" name="sort_order">
+                        <option value="ASC" th:selected="${sortOrder.equals('ASC')}">Ascending</option>
+                        <option value="DESC" th:selected="${sortOrder.equals('DESC')}">Descending</option>
+                    </select>
+                    <label for="sort_order">Order:</label>
+                </div>
+
+                <div class="form-floating me-3">
+                    <input type="text" class="form-control" id="size" name="size" placeholder="size"
+                           th:value="${param.size}">
+                    <label for="size">Page size:</label>
+                </div>
+                <button type="submit" class="btn btn-success" style="height: 43.5pt;">Search</button>
+            </div>
+        </div>
+    </form>
+    <!--    </div>-->
+
+    <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#exampleModal">
+        ADD NEW+
+    </button>
+
+    <table class="table mt-2">
+        <thead>
+        <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Name</th>
+            <th scope="col">Calories(Cal)</th>
+            <th scope="col">Amount</th>
+            <th scope="col">Price(KZT)</th>
+            <th scope="col">Manufacturer(Country)</th>
+            <th scope="col">Edit</th>
+            <th scope="col">Delete</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="st: ${foods}">
+            <th scope="row" th:text="${st.getId()}"></th>
+            <td th:text="${st.getFullName()}"></td>
+            <td th:text="${st.getCalories()}"></td>
+            <td th:text="${st.getAmounts()}"></td>
+            <td th:text="${st.getPrice()}"></td>
+            <td th:text="${st.getManufacturer().getName()+'/'+st.getManufacturer().getCode()}"></td>
+            <td>
+                <form method="get" th:action="@{view-food}">
+                    <input type="hidden" name="id" th:value="${st.getId()}">
+                    <button type="submit" class="btn btn-info">
+                        Edit
+                    </button>
+                </form>
+                <!--                <form method="post" th:action="@{/edit-food}">-->
+                <!--                    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">-->
+                <!--                        <div class="modal-dialog">-->
+                <!--                            <div class="modal-content">-->
+                <!--                                <div class="modal-header">-->
+                <!--                                    <h1 class="modal-title fs-5" id="editModalLabel">Edit Food</h1>-->
+                <!--                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>-->
+                <!--                                </div>-->
+                <!--                                <div class="modal-body">-->
+                <!--                                    <input type="hidden" th:value="${st.getId()}" name="id">-->
+                <!--                                    <div class=" mb-3">-->
+                <!--                                        <label class="form-label">Name</label>-->
+                <!--                                        <input type="text" th:value="${st.getFullName()}" name="fullName" class="form-control" placeholder="Name: "-->
+                <!--                                               aria-label="Name"-->
+                <!--                                               aria-describedby="basic-addon2">-->
+
+                <!--                                    </div>-->
+                <!--                                    <div class=" mb-3">-->
+                <!--                                        <label class="form-label">Calories(Cal)</label>-->
+                <!--                                        <input type="number" th:value="${st.getCalories()}" name="calories" class="form-control" placeholder="Cal: "-->
+                <!--                                               aria-label="Name"-->
+                <!--                                               aria-describedby="basic-addon2">-->
+
+                <!--                                    </div>-->
+                <!--                                    <div class=" mb-3">-->
+                <!--                                        <label class="form-label">Amount</label>-->
+                <!--                                        <input type="number" th:value="${st.getAmounts()}" name="amounts" class="form-control" placeholder="Amount: "-->
+                <!--                                               aria-label="Name"-->
+                <!--                                               aria-describedby="basic-addon2">-->
+
+                <!--                                    </div>-->
+                <!--                                    <div class=" mb-3">-->
+                <!--                                        <label class="form-label">Price</label>-->
+                <!--                                        <input type="number" th:value="${st.getPrice()}" name="price" class="form-control" placeholder="Price: "-->
+                <!--                                               aria-label="Name"-->
+                <!--                                               aria-describedby="basic-addon2">-->
+
+                <!--                                    </div>-->
+
+                <!--                                    <div class=" mb-3">-->
+                <!--                                        <label class="form-label">Country</label>-->
+                <!--                                        <select required class="form-select" name="manufacturer">-->
+                <!--                                            <option th:each="co:${countries}" th:selected="${st.manufacturer!=null && co.id.equals(st.manufacturer.id)}" th:value="${co.getId()}" th:text="${co.getName()+'/'+co.getCode()}"></option>-->
+                <!--                                        </select>-->
+
+                <!--                                    </div>-->
+                <!--                                </div>-->
+                <!--                                <div class="modal-footer">-->
+                <!--                                    <button type="submit" class="btn btn-primary">Edit</button>-->
+                <!--                                </div>-->
+                <!--                            </div>-->
+                <!--                        </div>-->
+                <!--                    </div>-->
+                <!--                </form>-->
+            </td>
+            <td>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    Delete
+                </button>
+                <form method="post" th:action="@{/delete-food}">
+                    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel"
+                         aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h1 class="modal-title fs-5" id="deleteModalLabel">Delete</h1>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <input type="hidden" th:value="${st.getId()}" name="id">
+                                    Are you sure?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-danger">YES</button>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center">
+            <li th:class="${currentPage==0?'page-item disabled':'page-item'}">
+                <a class="page-link"
+                   th:href="@{'/?page='+ ${currentPage -1}+'&size='+${size}+'&sort_by='+${sortBy}+'&sort_order='+${sortOrder}}"
+                   aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            <li th:each="number:${pageNumbers}" class="page-item">
+                <a th:text="${number+1}" th:class="${number==currentPage? 'page-link active':'page-link'}"
+                   th:href="@{'/?page='+${number}+'&size='+${size}+'&sort_by='+${sortBy}+'&sort_order='+${sortOrder}}"></a>
+            </li>
+
+            <li th:class="${lastPage==currentPage?'page-item disabled':'page-item'}">
+                <a th:href="@{'/?page='+ ${currentPage +1}+'&size='+${size}+'&sort_by='+${sortBy}+'&sort_order='+${sortOrder}}"
+                   class="page-link" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+
+    <form method="post" th:action="@{/add-food}">
+        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel">Add New Food</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class=" mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" name="fullName" class="form-control" placeholder="Name: "
+                                   aria-label="Name"
+                                   aria-describedby="basic-addon2">
+
+                        </div>
+                        <div class=" mb-3">
+                            <label class="form-label">Calories(Cal)</label>
+                            <input type="number" name="calories" class="form-control" placeholder="Cal: "
+                                   aria-label="Name"
+                                   aria-describedby="basic-addon2">
+
+                        </div>
+                        <div class=" mb-3">
+                            <label class="form-label">Amount</label>
+                            <input type="number" name="amounts" class="form-control" placeholder="Amount: "
+                                   aria-label="Name"
+                                   aria-describedby="basic-addon2">
+
+                        </div>
+                        <div class=" mb-3">
+                            <label class="form-label">Price</label>
+                            <input type="number" name="price" class="form-control" placeholder="Price: "
+                                   aria-label="Name"
+                                   aria-describedby="basic-addon2">
+
+                        </div>
+                        <div class=" mb-3">
+                            <label class="form-label">Country</label>
+                            <select class="form-select" name="manufacturer" aria-label="Default select example">
+                                <option th:value="${co.getId()}" th:each="co:${countries}"
+                                        th:text="${co.getName()+'/'+co.getCode()}">Open this select menu
+                                </option>
+                            </select>
+
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Add Food</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+
+    <!--    <form method="post" th:action="@{delete-food}">-->
+    <!--        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">-->
+    <!--            <div class="modal-dialog">-->
+    <!--                <div class="modal-content">-->
+    <!--                    <div class="modal-header">-->
+    <!--                        <h1 class="modal-title fs-5" id="deleteModalLabel">Delete</h1>-->
+    <!--                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>-->
+    <!--                    </div>-->
+    <!--                    <div class="modal-body">-->
+    <!--                        Are you sure?-->
+    <!--                    </div>-->
+    <!--                    <div class="modal-footer">-->
+    <!--                        <button type="submit" class="btn btn-danger">YES</button>-->
+    <!--                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>-->
+    <!--                    </div>-->
+    <!--                </div>-->
+    <!--            </div>-->
+    <!--        </div>-->
+    <!--    </form>-->
+
+</div>
+</body>
+</html>

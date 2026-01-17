@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/main">
+<div layout:fragment="mainFragment">
+    <form method="post" th:action="@{/edit-food}">
+        <div class="modal-content mt-5">
+            <div class="modal-body">
+                <input type="hidden" th:value="${st.getId()}" name="id">
+                <div class=" mb-3">
+                    <label class="form-label">Name</label>
+                    <input type="text" th:value="${st.getFullName()}" name="fullName" class="form-control"
+                           placeholder="Name: "
+                           aria-label="Name"
+                           aria-describedby="basic-addon2">
+
+                </div>
+                <div class=" mb-3">
+                    <label class="form-label">Calories(Cal)</label>
+                    <input type="number" th:value="${st.getCalories()}" name="calories" class="form-control"
+                           placeholder="Cal: "
+                           aria-label="Name"
+                           aria-describedby="basic-addon2">
+
+                </div>
+                <div class=" mb-3">
+                    <label class="form-label">Amount</label>
+                    <input type="number" th:value="${st.getAmounts()}" name="amounts" class="form-control"
+                           placeholder="Amount: "
+                           aria-label="Name"
+                           aria-describedby="basic-addon2">
+
+                </div>
+                <div class=" mb-3">
+                    <label class="form-label">Price</label>
+                    <input type="number" th:value="${st.getPrice()}" name="price" class="form-control"
+                           placeholder="Price: "
+                           aria-label="Name"
+                           aria-describedby="basic-addon2">
+
+                </div>
+
+                <div class=" mb-3">
+                    <label class="form-label">Country</label>
+                    <select required class="form-select" name="manufacturer">
+                        <option th:each="co:${countries}"
+                                th:selected="${st.manufacturer!=null && co.id.equals(st.manufacturer.id)}"
+                                th:value="${co.getId()}" th:text="${co.getName()+'/'+co.getCode()}"></option>
+                    </select>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Edit</button>
+            </div>
+        </div>
+    </form>
+
+    <h3> Assigned ingredients: </h3>
+    <div class="d-flex">
+        <div class="card me-3" th:each="ing : ${st.getIngredients()}">
+            <form class="d-flex px-2 py-2" method="post" th:action="@{'/delete-ingredient'}">
+                <button type="submit" class="btn btn-danger me-2">-</button>
+                <input type="hidden" name="ingredient_id" th:value="${ing.id}">
+                <input type="hidden" name="food_id" th:value="${st.id}">
+                <span class="mt-2" th:text="${ing.name}"></span>
+            </form>
+        </div>
+    </div>
+
+    <h3 class="mt-4"> Available ingredients: </h3>
+    <div class="d-flex mb-5">
+        <div class="card me-3" th:each="ing : ${availableIngredients}">
+            <!-- Эта форма назначает машине категорию -->
+            <form class="d-flex px-2 py-2" method="post" th:action="@{'/assign-ingredient'}">
+                <button type="submit" class="btn btn-success me-2">+</button>
+                <input type="hidden" name="ingredient_id" th:value="${ing.id}">
+                <input type="hidden" name="food_id" th:value="${st.id}">
+                <span class="mt-2" th:text="${ing.name}"></span>
+            </form>
+        </div>
+    </div>
+</div>
+</html>
