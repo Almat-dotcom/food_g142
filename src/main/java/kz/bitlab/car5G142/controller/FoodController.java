@@ -6,6 +6,9 @@ import kz.bitlab.car5G142.entity.Manufacturer;
 import kz.bitlab.car5G142.repository.FoodRepository;
 import kz.bitlab.car5G142.repository.IngredientRepository;
 import kz.bitlab.car5G142.repository.ManufacturerRepository;
+import kz.bitlab.car5G142.service.FoodService;
+import kz.bitlab.car5G142.service.IngredientService;
+import kz.bitlab.car5G142.service.ManufacturerService;
 import kz.bitlab.car5G142.specification.FoodSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,9 +26,9 @@ import java.util.stream.IntStream;
 @Controller
 @RequiredArgsConstructor
 public class FoodController {
-    private final FoodRepository foodRepository;
-    private final ManufacturerRepository manufacturerRepository;
-    private final IngredientRepository ingredientRepository;
+    private final FoodService foodService;
+    private final IngredientService ingredientService;
+    private final ManufacturerService manufacturerService;
 
 
     @GetMapping("/")
@@ -40,30 +43,16 @@ public class FoodController {
                        @RequestParam(name = "sort_by", defaultValue = "id") String sortBy,
                        @RequestParam(name = "sort_order", defaultValue = "ASC") String sortOrder
     ) {
-        Page<Food> foodsPage;
-        Sort sort=Sort.by(sortOrder.equals("ASC")? Sort.Direction.ASC: Sort.Direction.DESC, sortBy);
-        PageRequest req = PageRequest.of(pageNumber, sizeValue, sort);
 
-        //Query
-
-//        if (name != null && cal!=null) {
-//            foods = foodRepository.findAllByFullNameContainsIgnoreCaseAndCaloriesLessThanEqual(name,cal);
-//        } else if(name!=null){
-//            foods = foodRepository.findAlmat(name.toLowerCase());
-//        }else if(cal!=null){
-//            foods = foodRepository.findAllByCaloriesLessThanEqual(cal);
-//        }else {
-//            foods = foodRepository.findAll();
-//        }
-        Specification<Food> specification = FoodSpecification.queryFood(name, cal, price, countryId, ingredientId);
-        foodsPage = foodRepository.findAll(specification, req);
-//        model.addAttribute("sortBy")
+        Page<Food> foodsPage = foodService.foodsPage(sortOrder, sortBy, pageNumber, sizeValue,
+                name, cal, price, countryId, ingredientId);
+        List<Integer> pageNumbers = foodService.pageNumbers(foodsPage);
+        List<Manufacturer> manufacturers = manufacturerService.getAll();
+        List<Ingredient> ingredients = ingredientService.getAll();
 
         model.addAttribute("foods", foodsPage);
-        model.addAttribute("countries", manufacturerRepository.findAll());
-        model.addAttribute("ingredients", ingredientRepository.findAll());
-
-        List<Integer> pageNumbers = IntStream.range(0, foodsPage.getTotalPages()).boxed().toList();
+        model.addAttribute("countries", manufacturers);
+        model.addAttribute("ingredients", ingredients);
         model.addAttribute("pageNumbers", pageNumbers);
         model.addAttribute("currentPage", pageNumber);
         model.addAttribute("size", sizeValue);
@@ -77,27 +66,26 @@ public class FoodController {
 
     @PostMapping("add-food")
     public String add(Food food) {
-        foodRepository.save(food);
+        foodService.add(food);
         return "redirect:/";
     }
 
     @GetMapping("view-food")
     public String view(@RequestParam(name = "id") Long id,
                        Model model) {
-        Food food = foodRepository.findById(id).orElseThrow(() -> new RuntimeException("Food not found"));
+        Food food = foodService.getById(id);
+        List<Ingredient> ingredients = ingredientService.removeRedundantIngredients(food);
+        List<Manufacturer> manufacturers = manufacturerService.getAll();
+
         model.addAttribute("st", food);
-        model.addAttribute("countries", manufacturerRepository.findAll());
-        List<Ingredient> ingredients = ingredientRepository.findAll();
-        ingredients.removeAll(food.getIngredients());
+        model.addAttribute("countries", manufacturers);
         model.addAttribute("availableIngredients", ingredients);
         return "edit-ffod";
     }
 
     @PostMapping("delete-food")
     public String deleteFood(@RequestParam(name = "id") Long id) {
-//        Food food=foodRepository.findById(id).orElse(null);
-//        foodRepository.delete(food);
-        foodRepository.deleteById(id);
+        foodService.deleteById(id);
         return "redirect:/";
     }
 
@@ -108,37 +96,23 @@ public class FoodController {
                            @RequestParam(name = "amounts") Integer amounts,
                            @RequestParam(name = "price") Integer price,
                            @RequestParam(name = "manufacturer") Long manufId) {
-        Food food = foodRepository.findById(id).orElseThrow(() -> new RuntimeException("Food not found"));
-        Manufacturer manufacturer = manufacturerRepository.findById(manufId).orElseThrow(() -> new RuntimeException("Country not found"));
-        food.setAmounts(amounts);
-        food.setFullName(fullName);
-        food.setCalories(calories);
-        food.setPrice(price);
-        food.setManufacturer(manufacturer);
-        foodRepository.save(food);
+        foodService.editFood(id, manufId, amounts, fullName, calories, price);
         return "redirect:/";
     }
 
     @PostMapping("/assign-ingredient")
     public String assign(@RequestParam(name = "ingredient_id") Long ingredientId,
                          @RequestParam(name = "food_id") Long foodId) {
-        Food food = foodRepository.findById(foodId).orElseThrow(() -> new RuntimeException("Food not found"));
-        Ingredient ingredient = ingredientRepository.findById(ingredientId).orElseThrow(() -> new RuntimeException("Ingredient not found"));
-
-        food.getIngredients().add(ingredient);
-        foodRepository.save(food);
-        return "redirect:/view-food?id=" + food.getId();
+        Long id = foodService.addIngredientToFood(foodId, ingredientId);
+        return "redirect:/view-food?id=" + id;
     }
+
 
     @PostMapping("/delete-ingredient")
     public String deleteIngr(@RequestParam(name = "ingredient_id") Long ingredientId,
                              @RequestParam(name = "food_id") Long foodId) {
-        Food food = foodRepository.findById(foodId).orElseThrow(() -> new RuntimeException("Food not found"));
-        Ingredient ingredient = ingredientRepository.findById(ingredientId).orElseThrow(() -> new RuntimeException("Ingredient not found"));
-
-        food.getIngredients().remove(ingredient);
-        foodRepository.save(food);
-        return "redirect:/view-food?id=" + food.getId();
+        Long id = foodService.deleteIngredient(foodId, ingredientId);
+        return "redirect:/view-food?id=" + id;
     }
 
 
